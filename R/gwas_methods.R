@@ -33,7 +33,7 @@
 #' abline( 0, 1, lwd = 2, col = "orange" )
 #' par( mfrow = c(2, 1) )
 #' plot( -log10(pv.oracle), cex = .4, col = "grey", main = "Manhattan plot" )
-#' points( sim$causal, -log10(pv.cate)[sim$causal], type = "h", lty = 1, col = "blue" )
+#' points( sim$causal, -log10(pv.oracle)[sim$causal], type = "h", lty = 1, col = "blue" )
 #' plot( -log10(pv.cate), cex = .4, col = "grey", main = "Manhattan plot" )
 #' points( sim$causal, -log10(pv.cate)[sim$causal], type = "h", lty = 1, col = "red" )
 #' @export
