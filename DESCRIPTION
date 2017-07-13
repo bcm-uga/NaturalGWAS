@@ -4,11 +4,7 @@ Title: Simulation of Phenotypes for Natural Gwas
 Version: 0.1.0
 Author: Olivier François
 Maintainer: Olivier François <olivier.francois@grenoble-inp.fr>
-Description: This package contains functions for reproducing the analyses described in (Francois and Caye 2017). 
-The package allows simulating phenotypes from genotypes by including realistic GxE interactions and confounders. 
-It also runs an oracle method, that estimates associations of genotypes with a simulated trait by using the 
-true confounders that generated the simulation. The package enables comparisons of methods that evaluate causality 
-from the data with the oracle approach.
+Description: This package contains functions for reproducing the analyses described in (Francois and Caye 2017). The package allows simulating phenotypes from genotypes by including realistic GxE interactions and confounders. It also runs an oracle method, that estimates associations of genotypes with a simulated trait by using the true confounders that generated the simulation. The package enables comparisons of methods that evaluate causality from the data with the oracle approach.
 License: GPL
 Encoding: UTF-8
 LazyData: true
