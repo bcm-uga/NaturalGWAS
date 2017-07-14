@@ -1,6 +1,6 @@
 Package: naturalgwas
 Type: Package
-Title: Simulation of Phenotypes for Natural Gwas
+Title: Simulating Phenotypes and Evaluating GWAS Methods
 Version: 0.1.0
 Author: Olivier François
 Maintainer: Olivier François <olivier.francois@grenoble-inp.fr>
