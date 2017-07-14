@@ -1,22 +1,13 @@
---- 
+---
 title: "Simulating phenotypes and evaluating GWAS methods with naturalgwas"
 author: "Olivier François"
-date: '`r Sys.Date()`'
-output:
-  rmarkdown::html_vignette: default
-  '#pdf_document': default
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
 vignette: >
-  \VignetteIndexEntry{Vignette Title} 
-  \VignetteEngine{knitr::rmarkdown} 
-  \VignetteEncoding{UTF-8}
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
-
-```{r setup, include=FALSE} 
-knitr::opts_chunk$set(cache = TRUE, message = FALSE, cache.path = "main-vignette_cache/")
-```
-
-
-
 
 ----
 **Summary:** 

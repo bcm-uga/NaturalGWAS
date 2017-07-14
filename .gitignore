@@ -4,14 +4,15 @@
 .Ruserdata
 
 R/.Rapp.history
+.DS_Store
 
 wc2-5/*
 pheno.r
 geno*
 genotype.pca/*
 
-.DS_Store
-
 vignettes/wc2-5/*
 vignettes/geno*
-vignettes/main-vignette_cache/*
+vignettes/main-vignette_files/*
+
+inst/doc
