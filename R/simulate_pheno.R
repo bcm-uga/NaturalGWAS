@@ -56,12 +56,14 @@ create_factor <- function(genotype, K){
   require(LEA)
   write.geno(R = genotype, output = "genotype.geno")
   pc = LEA::pca("./genotype.geno")
-  plot(pc, lwd = 5, col = "red", xlab = "PCs", ylab = "Eigenvalues")
+  plot(pc, lwd = 5, col = "blue", cex = .6, xlab = "Factors", ylab = "Eigenvalues")
 
   sigma <- sqrt(sum(pc$sdev^2) - sum(pc$sdev[ 1:K ]^2))
   base.effect <- sqrt( sum(pc$sdev^2) )
 
   result <- list(factors = pc$eigenvectors[ , 1:K ], sigma = sigma, base = base.effect)
+  remove.pcaProject("genotype.pcaProject")
+  file.remove("genotype.geno")
   class(result) <- "confounder"
   return(result)
 }
@@ -127,14 +129,24 @@ create_refset <- function(window = 101, chr.pos){
 #' sim.ph <- simu_pheno(A.thaliana$genotype, confounder, env, ref.set,
 #' ncausal = 20, effect.size = 100, gxe = 1)
 #' @export
-simu_pheno <- function(genotype, confounder, environment, ref.set, ncausal, effect.size, gxe){
+simu_pheno <- function(genotype, confounder, environment = NULL, ref.set, ncausal, effect.size, gxe){
 
   causal.set <- sort( sample(ref.set, ncausal, rep = FALSE) )
 
-  pheno <- effect.size*rowSums(genotype[ , causal.set])
-            + gxe*environment*rowSums(genotype[ , causal.set])
+  if (!inherits(confounder, "confounder")) stop("confounder not of class confounder")
+
+  effect.size <- effect.size*confounder$base
+
+  if (is.null(environment)){
+    pheno <- effect.size*rowSums(genotype[ , causal.set])
             + rowSums(confounder$factors)
             + rnorm(nrow(genotype), sd = confounder$sigma)
+  } else {
+    pheno <- effect.size*rowSums(genotype[ , causal.set])
+    + gxe*environment*rowSums(genotype[ , causal.set])
+    + rowSums(confounder$factors)
+    + rnorm(nrow(genotype), sd = confounder$sigma)
+  }
 
   return(list(phenotype = pheno, causal.set = causal.set))
 }
