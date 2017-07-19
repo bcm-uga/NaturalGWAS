@@ -1,7 +1,7 @@
 # naturalgwas
 
 
-**naturalgwas** is an R package for simulating phenotypes and evaluate GWAS methods in studies where geographic coverage is large and the studied populations exhibit high levels of population genetic structure (natural GWAS). This package contains the simulation scripts used in (Francois and Caye 2017) for comparing latent factor models to oracle methods in this context. 
+**naturalgwas** is an R package for simulating phenotypes and evaluating GWAS methods in studies where geographic coverage is large and the studied populations exhibit high levels of population genetic structure (natural GWAS). This package contains the simulation scripts used by Francois and Caye (2017) for comparing latent factor models to oracle methods in this context. 
 
 
 ## Installation
