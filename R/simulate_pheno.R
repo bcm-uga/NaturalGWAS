@@ -133,9 +133,10 @@ simu_pheno <- function(genotype, confounder, environment = NULL, ref.set, ncausa
 
   causal.set <- sort( sample(ref.set, ncausal, rep = FALSE) )
 
-  if (!inherits(confounder, "confounder")) stop("confounder not of class confounder")
+  if (!inherits(confounder, "confounder")) stop("The confounder argument is not of class 'confounder'.")
 
   effect.size <- effect.size*confounder$base
+  gxe <- gxe*confounder$base
 
   if (is.null(environment)){
     pheno <- effect.size*rowSums(genotype[ , causal.set])

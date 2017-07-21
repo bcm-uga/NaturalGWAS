@@ -9,11 +9,9 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-----
-**Summary:**
+#### Summary
 
-Association studies of polygenic traits with genomic loci are notoriously difficult when those studies are conducted at large geographical scales. The difficulty arises as genotype frequencies often vary in geographic space and across distinct environments in a complex fashion. Those large-scale variations are known to yield false positives in association testing approaches.  
-The R package **naturalgwas** allows researchers to simulate trait association at weakly linked loci, modelling gene by environment interaction where environment is derived from a climate database.  Our package includes an oracle method correcting false associations by using the true set of confounding variables. The simulated data can be used to compare the ability of association methods to correctly remove confounding factors, to evaluate power to detect causal variants, and to assess the influence of various parameters including the number of causal variants, effect sizes and gene by environment interaction. 
+Association studies of polygenic traits with genomic loci are notoriously difficult when those studies are conducted at large geographical scales. The difficulty arises as genotype frequencies often vary in geographic space and across distinct environments in a complex fashion. Those large-scale variations are known to yield false positives in association testing approaches. The R package **naturalgwas** allows researchers to simulate trait association at weakly linked loci, modelling gene by environment interaction where environment is derived from a climate database.  Our package includes an oracle method correcting false associations by using the true set of confounding variables. The simulated data and the oracle method can be used t 1) compare the ability of association methods to correctly remove confounding factors, 2) to evaluate power to detect causal variants, and 3) to assess the influence of various parameters including the number of causal variants, effect sizes and gene by environment interaction. 
 
 ----
 
@@ -146,11 +144,10 @@ In this situation, the latent factor model performed similarly to the oracle met
 
 #### Package reference
 
-* Caye K,  Francois O (2017). 
+* Francois O, Caye K (2017). naturalgwas: An R package for simulating phenotypes and evaluating GWAS methods with large geographic sampling.
 
 
 #### References
-
 
 
 * Atwell S, Huang YS, Vilhjalmsson BJ, et al. (2010). Genome-wide association study of 107 phenotypes in Arabidopsis thaliana inbred lines. Nature 465, 627-631.
