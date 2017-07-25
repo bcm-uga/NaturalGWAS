@@ -1,13 +1,14 @@
-#' This function performs a GWAS based on the eigenstrat method. In simulations, it is an oracle
-#' method when the true confounders are provided in arguments.
-#' @title Performs a gwas based on the eigenstrat method.
+#' This function performs a GWAS based on the linear regression method with known
+#' confounders. This is an oracle
+#' method when the true confounders are provided as arguments.
+#' @title Performs a gwas based on linear regression.
 #' @author Olivier François
 #' @param genotype an n by p matrix of SNP genotypes where n is the number of individuals (rows) and p is the
 #' number of SNPs (columns).
 #' @param phenotype a vector of n phenotypic traits. If the phenotypes are generated from
 #' \code{\link{simu_pheno}} with the same confounder object, then the method is an oracle method.
 #' @param confounder an object of class "confounder" created with \code{\link{create_factor}}.
-#' @param K number of factors in the eigenstrat method.
+#' @param K number of factors in the adjustment method.
 #' @return a vector of p-values and an estimate of genomic inflation for all SNPs in the genotype matrix.
 #' @return pvalues  a vector of length p containing all calibrated p-values for phenotype-genotype association tests.
 #' @return gif genomic inflation factor.

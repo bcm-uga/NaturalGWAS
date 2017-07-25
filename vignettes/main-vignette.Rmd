@@ -67,7 +67,7 @@ For simulating artificial phenotypes from real genotypes and accounting for geno
   confounder <- create_factor( genotype, K = 20 )
 ```  
   
-The above commands create an artificial environmental variable by combining 19 bioclimatic variables extracted from the 'worldclim' database, and takes a few minutes to download. The SNP reference set consists of picking one representant SNP in each window of size **window**. In the third line, 20 confounders are computed from the data. Here the confounders correspond to the first twenty principal components of the genotype matrix. 
+The above commands create an artificial environmental variable by combining 19 bioclimatic variables extracted from the 'worldclim' database, and takes a few minutes to download. The SNP reference set consists of picking one representant SNP in each window of size **window**. In the third line, 20 confounders are computed from the data. Here the confounders correspond to the first twenty principal components of the genotype matrix using PCA from LEA (Frichot and Francois 2015). 
 
 In addition, the **create_factor** function estimates the amount of residual variation in the data and an order of magnitude for visible effect sizes.
 
@@ -105,7 +105,7 @@ To chech whether the simulated trait displays any geographic variation, the trai
 
 ##### Running GWAS
 
-Our next step is to perform a GWAS for the simulated phenotype, and to evaluate the relative power of methods to detect causal variants. To this objective, we use the 'eigenstrat' method as an oracle algorithm. The method is very close to the simulation model, and it becomes an oracle method when the true confounders are provided as arguments.
+Our next step is to perform a GWAS for the simulated phenotype, and to evaluate the relative power of methods to detect causal variants. To this objective, we use the 'linear regression' method as an oracle algorithm. The method is very close to the simulation model, and it becomes an oracle method when the true confounders are provided as arguments.
 
 Based on a principal component analysis of the genotype data, we evaluate that $K = 6$ factors explain population structure.  
 

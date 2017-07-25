@@ -2,7 +2,7 @@
 % Please edit documentation in R/gwas_methods.R
 \name{oracle}
 \alias{oracle}
-\title{Performs a gwas based on the eigenstrat method.}
+\title{Performs a gwas based on linear regression.}
 \usage{
 oracle(phenotype, genotype, confounder, K)
 }
@@ -15,7 +15,7 @@ number of SNPs (columns).}
 
 \item{confounder}{an object of class "confounder" created with \code{\link{create_factor}}.}
 
-\item{K}{number of factors in the eigenstrat method.}
+\item{K}{number of factors in the adjustment method.}
 }
 \value{
 a vector of p-values and an estimate of genomic inflation for all SNPs in the genotype matrix.
@@ -25,8 +25,9 @@ pvalues  a vector of length p containing all calibrated p-values for phenotype-g
 gif genomic inflation factor.
 }
 \description{
-This function performs a GWAS based on the eigenstrat method. In simulations, it is an oracle
-method when the true confounders are provided in arguments.
+This function performs a GWAS based on the linear regression method with known
+confounders. This is an oracle
+method when the true confounders are provided as arguments.
 }
 \examples{
 library(naturalgwas)

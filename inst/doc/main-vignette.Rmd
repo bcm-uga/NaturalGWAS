@@ -1,0 +1,158 @@
+---
+title: "Simulating phenotypes and evaluating GWAS methods with naturalgwas"
+author: "Olivier François"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+----
+**Summary:** 
+----
+
+#### Introduction
+
+This vignette presents a short tutorial on how to simulate phenotypes for "natural" organisms, and evaluate GWAS methods when field sampling has been performed at a large geographic scale. We illustrate the approach with data simulated from the plant species *Arabidopsis thaliana*. Let's start with loading the R functions in memory space.
+
+
+```{r}
+library(naturalgwas)
+```
+
+
+
+##### Data files
+
+Running the main simulation function **simu_pheno**, and running the **oracle** method requires three files as input to the program: 1) a file encoding individual genotypes, 2) a file with individual geographic coordinates, and 3) a genetic map. Consider SNP data from the plant species *A. thaliana* in Europe.
+
+
+```{r data} 
+data(A.thaliana)
+genotype <- A.thaliana$genotype
+coordinates <- A.thaliana$coord
+chrpos <- A.thaliana$chrpos 
+```
+
+For SNPs, the **genotype** matrix encodes each individual genotype in a row. Each locus corresponds to a specific column. Genotypes are encoded as 0,1,2 for diploids, and 0,1 for haploids. Those numbers represent the number of reference or derived allele at each particular locus. *A. thaliana* is a diploid species with very high levels of inbreeding. In our example, 170 genotypes were encoded as haploid (26,943 loci). Here, the SNP data and the geographic coordinates are real data (Atwell et al 2010), and the genetic map is artificial (positions don't match with the genome). Let's print some genotypic values for the first 3 individuals at the 10 first loci. We have a matrix with 0 and 1 values.  
+
+```{r}
+dim(genotype)
+genotype[1:3,1:10]
+```
+
+The **coordinate** file is a two-column file that contains longitude and latitude for each individual in the sample. Longitude (°E) and latitude (°N) must be encoded in the decimal format. Headers must be ignored when loading the data into the R program. 
+
+
+```{r}
+library(maps)
+plot(coordinates, pch = 19, cex = .5, 
+     xlab = "Longitude (°E)", ylab = "Latitude (°N)")
+map(add = T, interior = F)
+```
+
+
+
+##### Simulating artificial phenotypes from real genotypes
+
+For simulating artificial phenotypes from real genotypes and accounting for genotype bby environment interactions, we need 1) a proxy variable for the enviromnent, 2) a reference set of weakly linked loci, where we'll simulate association with a phenotype, 3) and a set of confounder factors, that arise from complex population structure and isolation-by-distance processes.  
+
+```{r init, dependson=c("data"), results="hide"} 
+  env <- get_climate( coordinates )
+  ref.set <- create_refset( chrpos, window = 101 )
+  confounder <- create_factor( genotype, K = 20 )
+```  
+  
+The above commands create an artificial environmental variable by combining 19 bioclimatic variables extracted from the 'worldclim' database. The SNP reference set consists of picking one representant SNP in each window of size **window**. In the third line, 20 confounders are computed from the data. The confounders correspond to the first twenty principal components of the genotype matrix. 
+
+The **create_factor** function also estimates the amount of residual variation in the data and an order of magnitude for visible effect sizes.
+
+```{r, dependson=c("init")} 
+  confounder$sigma 
+  confounder$base 
+```  
+
+A simulation of a phenotypic trait is performed as follows.
+```{r sim, dependson=c("init"), results="hide"}   
+  sim <- simu_pheno( A.thaliana$genotype, confounder, env, ref.set,
+                     ncausal = 20, effect.size = 5000, gxe = .3 )
+```
+
+In this simulation, a polygenic trait is associated with 20 causal variants, sampled from the SNP reference set. Each causal variant is associated with an effect size of 1000. Gene by environment interaction are modelled by using the *env* variable created from 'worldclim'. 
+
+
+```{r, dependson=c("sim")}   
+  hist(sim$phenotype, main = "Trait value")
+```
+
+The trait displays geographic variation that can be displayed by kriging, as follows. 
+
+```{r, dependson=c("sim")}   
+  library(fields)
+  fit = Krig(coordinates, sim$phenotype, theta = 10, m = 2)
+  surface(fit, extrap = TRUE, xlab = "Longitude", ylab = "Latitude")
+  map(add = TRUE, interior = F)
+```
+
+
+
+
+
+
+##### Running GWAS
+
+Our next step is to run a GWAS for the simulated phenotype, and evaluate the relative power of methods to detect causal variants. To this objective, we use the 'eigenstrat method' as an oracle algorithm. The method is very close to the simulation model, and it become an oracle method when the true confounders are provided as arguments.
+
+Based on a principal component analysis of the genotype data, we evaluate that $K = 6$ factors explain population structure.  
+
+
+```{r oracle, dependson=c("sim")}   
+pv.oracle <- oracle( sim$phenotype, genotype, confounder, K = 6 )$pv
+```
+
+Let us compare the results of method that estimate confounders at the same time as it computes association with phenotype. 
+
+
+```{r cate, dependson=c("oracle")}   
+  library(cate)
+  pv.cate <- cate( ~ sim.phenotype, X.data = data.frame(sim$phenotype), Y = genotype, r = 6, calibrate = TRUE)$beta.p.value
+```
+
+Now, let us visualize the Manhattan plots. The vertical bars correspond to the causal variants in the simulation. 
+
+```{r, dependson=c("cate")}   
+   plot( -log10(pv.oracle), cex = .4, col = "grey", main = "Manhattan plot" )
+   points( sim$causal, -log10(pv.oracle)[sim$causal], type = "h", lty = 1, col = "blue" )
+   plot( -log10(pv.cate), cex = .4, col = "grey", main = "Manhattan plot" )
+   points( sim$causal, -log10(pv.cate)[sim$causal], type = "h", lty = 1, col = "red" )
+```
+
+We eventually compare the results of "cate" with the oracle method.
+
+```{r, dependson=c("cate")}   
+   ## qqplot
+   qqplot( -log10(pv.oracle), -log10(pv.cate) , pch = 19, cex = .4, col = "grey" )
+   abline( 0, 1, lwd = 2, col = "orange" )
+```
+
+
+#### Package reference
+
+* Caye K,  Francois O (2017). 
+
+
+#### References
+
+
+
+* Atwell S, Huang YS, Vilhjalmsson BJ, et al. (2010). Genome-wide association study of 107 phenotypes in Arabidopsis thaliana inbred lines. Nature 465, 627-631.
+
+* Francois O, Martins H, Caye K, Schoville SD (2016). Controlling false discoveries in genome scans for selection. Molecular Ecology 25, 454-469.
+
+* Frichot E, Francois O (2015). LEA: an R package for Landscape and Ecological Association studies. Methods in Ecology and Evolution 6(8), 925-929.
+
+
+
+

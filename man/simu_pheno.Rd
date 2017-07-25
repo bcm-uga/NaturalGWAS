@@ -4,8 +4,8 @@
 \alias{simu_pheno}
 \title{Simulate phenotypes based on genotypes.}
 \usage{
-simu_pheno(genotype, confounder, environment, ref.set, ncausal, effect.size,
-  gxe)
+simu_pheno(genotype, confounder, environment = NULL, ref.set, ncausal,
+  effect.size, gxe)
 }
 \arguments{
 \item{genotype}{an n by p matrix of SNP genotypes where n is the number of individuals (rows) and p is the
