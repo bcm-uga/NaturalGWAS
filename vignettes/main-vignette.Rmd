@@ -21,6 +21,8 @@ This vignette presents a short tutorial on how to simulate phenotypes for "natur
 
 
 ```{r}
+#install.packages("cate")
+#devtools::install_github("bcm-uga/lfmm")
 library(naturalgwas)
 ```
 
@@ -141,6 +143,40 @@ We eventually compare the results of the latent factor model with the oracle met
 
 In this situation, the latent factor model performed similarly to the oracle method (i.e., it is the right method to use). Other testing methods could be evaluated similarly (glm, mixed models, etc).  
 
+
+
+##### Comparison with LFMM
+
+For comparisons with **cate**, we also use $K = 6$ factors in **lfmm**.  
+
+
+```{r lfmm}   
+lfmm.res <- lfmm::lfmm_ridge(Y = scale(genotype, scale = FALSE), X = scale(sim$phenotype), K = 6)
+```
+
+We compute the pvalues as follows
+
+```{r}   
+  p <- lfmm::lfmm_test(Y = scale(genotype, scale = FALSE), X = scale(sim$phenotype), lfmm = lfmm.res, calibrate = "gif")
+  pv.lfmm <- p$calibrated.pvalue
+```
+
+Now let us visualize the Manhattan plots for **lfmm** and **cate**. The vertical bars correspond to the causal variants in the simulation. 
+
+```{r, dependson=c("cate")}   
+   plot( -log10(pv.lfmm), cex = .4, col = "grey", main = "Manhattan plot (lfmm)" )
+   points( sim$causal, -log10(pv.lfmm)[sim$causal], type = "h", lty = 1, col = "blue" )
+   plot( -log10(pv.cate), cex = .4, col = "grey", main = "Manhattan plot (cate)" )
+   points( sim$causal, -log10(pv.cate)[sim$causal], type = "h", lty = 1, col = "orange" )
+```
+
+We eventually compare the results of the latent factor model with the oracle method.
+
+```{r, dependson=c("cate")}   
+   ## plot
+   plot(-log10(pv.lfmm), -log10(pv.cate) , pch = 19, cex = .4, col = "grey" )
+   abline( 0, 1, lwd = 2, col = "blue" )
+```
 
 #### Package reference
 
