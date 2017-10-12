@@ -6,7 +6,7 @@
 #' \itemize{
 #'   \item genotype binary (0 or 1) SNP frequency for 170 accessions (26943 SNPs).
 #'   \item coord longitude and latitude of individuals
-#'   \item chrpos genetic map, chromosome, position of each SNP
+#'   \item chrpos genetic map: chromosome and position of each SNP
 #' }
 #'
 #' @docType data
