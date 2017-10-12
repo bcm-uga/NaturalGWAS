@@ -174,6 +174,8 @@ We eventually compare the results of the latent factor model with the oracle met
 
 ```{r, dependson=c("cate")}   
    ## plot
+   qqplot(-log10(pv.lfmm), -log10(pv.cate) , pch = 19, cex = .4, col = "grey" )
+   abline( 0, 1, lwd = 2, col = "orange" )
    plot(-log10(pv.lfmm), -log10(pv.cate) , pch = 19, cex = .4, col = "grey" )
    abline( 0, 1, lwd = 2, col = "blue" )
 ```
