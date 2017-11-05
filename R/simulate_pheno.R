@@ -139,14 +139,9 @@ simu_pheno <- function(genotype, confounder, environment = NULL, ref.set, ncausa
   gxe <- gxe*confounder$base
 
   if (is.null(environment)){
-    pheno <- effect.size*rowSums(genotype[ , causal.set])
-            + rowSums(confounder$factors)
-            + rnorm(nrow(genotype), sd = confounder$sigma)
+    pheno <- effect.size*rowSums(genotype[ , causal.set]) + rowSums(confounder$factors) + rnorm(nrow(genotype), sd = confounder$sigma)
   } else {
-    pheno <- effect.size*rowSums(genotype[ , causal.set])
-    + gxe*environment*rowSums(genotype[ , causal.set])
-    + rowSums(confounder$factors)
-    + rnorm(nrow(genotype), sd = confounder$sigma)
+    pheno <- effect.size*rowSums(genotype[ , causal.set]) + gxe*environment*rowSums(genotype[ , causal.set]) + rowSums(confounder$factors) + rnorm(nrow(genotype), sd = confounder$sigma)
   }
 
   return(list(phenotype = pheno, causal.set = causal.set))
