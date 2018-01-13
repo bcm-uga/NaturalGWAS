@@ -54,14 +54,18 @@ get_climate <- function(coord){
 #' @export
 create_factor <- function(genotype, K){
   require(LEA)
-  write.geno(R = genotype, output = "genotype.geno")
+  LEA::write.geno(R = genotype, output = "genotype.geno")
   pc = LEA::pca("./genotype.geno")
-  plot(pc, lwd = 5, col = "blue", cex = .6, xlab = "Factors", ylab = "Eigenvalues")
+  pc.sdev2 <- pc$sdev^2
+  plot(pc.sdev2, lwd = 4, col = "blue", type = "h",
+       xlab = "Factors", ylab = "Eigenvalues")
 
-  sigma <- sqrt(sum(pc$sdev^2) - sum(pc$sdev[ 1:K ]^2))
-  base.effect <- sqrt( sum(pc$sdev^2) )
+  sigma <- sqrt(sum(pc$sdev^2) - sum(pc$sdev[1:K]^2))
+  base.effect <- sqrt(sum(pc$sdev^2))
 
-  result <- list(factors = pc$eigenvectors[ , 1:K ], sigma = sigma, base = base.effect)
+  result <- list(factors = pc$projections[,1:K],
+                 sigma = sigma,
+                 base = base.effect)
   remove.pcaProject("genotype.pcaProject")
   file.remove("genotype.geno")
   class(result) <- "confounder"
