@@ -11,13 +11,13 @@ vignette: >
 
 #### Summary
 
-Association studies of polygenic traits with genomic loci are notoriously difficult when those studies are conducted at large geographical scales. The difficulty arises as genotype frequencies often vary in geographic space and across distinct environments in a complex fashion. Those large-scale variations are known to yield false positives in association testing approaches. The R package **naturalgwas** allows researchers to simulate trait association at weakly linked loci, modelling gene by environment interaction where environment is derived from a climate database.  Our package includes an oracle method correcting false associations by using the true set of confounding variables. The simulated data and the oracle method can be used t 1) compare the ability of association methods to correctly remove confounding factors, 2) to evaluate power to detect causal variants, and 3) to assess the influence of various parameters including the number of causal variants, effect sizes and gene by environment interaction. 
+Association studies of polygenic traits with genomic loci are notoriously difficult when those studies are conducted at large geographical scales. The difficulty arises as genotype frequencies often vary in geographic space and across distinct environments in a complex fashion. Those large-scale variations are known to yield false positives in association testing approaches. The R package **naturalgwas** allows researchers to simulate trait association from observed genotypes, modelling gene by environment interactions where environment is derived from a climate database.  The R package includes an oracle method correcting false associations by using the true set of confounding variables. The simulated data and the oracle method can be used 1) to compare the ability of association methods to correctly remove confounding factors for a particular data set, 2) to evaluate power to detect causal variants, and 3) to assess the influence of various parameters including the number of causal variants, effect sizes and gene by environment interaction. 
 
 ----
 
 #### Introduction
 
-This vignette presents a short tutorial on how to simulate phenotypes for "natural" organisms, and evaluate genome-wide association studies (GWAS) when field sampling has been performed at a large geographic scale. We illustrate the simulation approach with some data simulated for the plant species *Arabidopsis thaliana* (Atwell et al. 2010). To start with the R package **naturalgwas**, load the R functions in memory space as follows.
+This vignette presents a short tutorial on how to simulate phenotypes for "natural" organisms, and evaluate genome-wide association studies (GWAS) when field sampling has been performed at a large geographical scale. We illustrate the simulation approach with some phenotypic traits simulated from data of the plant species *Arabidopsis thaliana* (Atwell et al. 2010). To start with the R package **naturalgwas**, load the R functions in memory space as follows.
 
 
 ```{r}
@@ -30,119 +30,228 @@ library(naturalgwas)
 
 ##### Data files
 
-Running the main simulation function **simu_pheno**, and running the **oracle** method requires three files as input to the program: 1) a file encoding individual genotypes, 2) a file with individual geographic coordinates, and 3) a genetic map. Consider SNP data from the plant species *A. thaliana* in Europe. The simulation could also work without geographic data by specifying a \code{NULL} environment. 
+Running the main simulation function **simu_pheno**, and running the **oracle** method requires three files as input to the program: 1) a file encoding individual genotypes, 2) a file with individual geographic coordinates, and 3) a genetic map. Those data must be loaded in the R environment. The simulation could also work without geographic data by specifying a \code{NULL} environmental variable. For example, we considered SNP data from the chromosome 5 of European accession/ecotypes of the plant species *A. thaliana*.
 
 
 ```{r data} 
 data(A.thaliana)
 genotype <- A.thaliana$genotype
-coordinates <- A.thaliana$coord
 chrpos <- A.thaliana$chrpos 
 ```
 
-For SNPs, the **genotype** matrix encodes each individual genotype in a row. Each locus corresponds to a specific column. Genotypes are encoded as 0,1,2 for diploids, and 0,1 for haploids. Those numbers represent the number of reference or derived allele at each particular locus. *A. thaliana* is a diploid species with very high levels of inbreeding. In our example, 170 genotypes were encoded as haploids considering 26,943 loci from chromosome 1. Here the SNP data and the geographic coordinates are data from Atwell et al.'s (2010) study. For our example, the genetic map is artificial, meaning that SNP positions don't match with the plant genome. Let's print some genotypic values for the first 3 individuals at the 10 first loci. We have a matrix with 0 and 1 values.  
+For SNPs, the **genotype** matrix encodes each individual genotype in a row. Each locus corresponds to a specific column. Genotypes are encoded as 0,1,2 for diploids, and 0,1 for haploids. Those numbers represent the number of reference or derived allele at each particular locus. *A. thaliana* is a diploid species with very high levels of inbreeding. In our example, 162 genotypes were encoded as haploids considering 53,859 SNPs from chromosome 5 (Atwell et al. 2010). Let's print some genotypic values for three individuals at the first ten loci. We have a matrix of size 3 times 10 filled with 0 and 1 values.  
+
 
 ```{r}
 dim(genotype)
-genotype[1:3,1:10]
+genotype[sample(162, 3),1:10]
 ```
 
-The **coordinate** variable is a two-column matrix that contains longitude and latitude for each individual in the sample. Longitude (°E) and latitude (°N) must be encoded in the decimal format. Note that headers should be ignored when loading data into the R program. 
+The **coordinate** variable is a two-column matrix that contains longitude and latitude for each individual in the sample. Longitude (°E) and latitude (°N) must be encoded in the decimal format. Note that headers should be ignored when loading data into the R program. Let us show the location of the sampling sites in Europe (each point corresponds to an individual in the sample).
 
 
 ```{r}
 library(maps)
-plot(coordinates, pch = 19, cex = .5, 
-     xlab = "Longitude (°E)", ylab = "Latitude (°N)")
-map(add = T, interior = F)
+coordinates <- A.thaliana$coord
+plot(coordinates, 
+     pch = 19, cex = .7, col = "green4",
+     xlab = "Longitude (°E)", 
+     ylab = "Latitude (°N)")
+map(add = T, interior = FALSE)
 ```
 
 
 
 ##### Simulating artificial phenotypes from real genotypes
 
-For simulating artificial phenotypes from real genotypes and accounting for genotype by environment interactions, we need 1) a proxy variable for the enviromnent, 2) a reference set of weakly linked loci for which we wish to simulate trait association, 3) and a set of confounder factors typically arising from complex population structure and isolation-by-distance processes.  
+For simulating artificial phenotypes from real genotypes and accounting for genotype by environment interactions, we need 1) a proxy variable for the enviromnent, 2) a reference set of weakly linked causal loci for which we wish to simulate trait association, 3) and a set of confounder factors typically arising from complex population structure and isolation-by-distance.  
 
-```{r init, dependson=c("data"), results="hide"} 
-  env <- get_climate( coordinates )
-  ref.set <- create_refset( chrpos, window = 101 )
-  confounder <- create_factor( genotype, K = 20 )
+```{r init, results="hide"} 
+  env <- get_climate(coordinates)
+  ref.set <- create_refset(chrpos, window = 501)
+  confounder <- create_factor(genotype, K = 10)
 ```  
   
-The above commands create an artificial environmental variable by combining 19 bioclimatic variables extracted from the 'worldclim' database, and takes a few minutes to download. The SNP reference set consists of picking one representant SNP in each window of size **window**. In the third line, 20 confounders are computed from the data. Here the confounders correspond to the first twenty principal components of the genotype matrix using PCA from LEA (Frichot and Francois 2015). 
+The above commands create an artificial environmental variable by combining 19 bioclimatic variables extracted from the 'worldclim' database, and they take a few minutes to download. The SNP reference set consists of picking one representant SNP in each window of size **window**. In the third line, 10 confounders are computed from the data. The confounders correspond to the first ten principal components of the genotype matrix using PCA from LEA (Frichot and Francois 2015). The PCA screeplot for the SNP data is displayed.
 
-In addition, the **create_factor** function estimates the amount of residual variation in the data and an order of magnitude for visible effect sizes.
+In addition, the **create_factor** function estimates the amount of residual variation in the data and an order of magnitude for effect sizes.
 
 ```{r, dependson=c("init")} 
   confounder$sigma 
   confounder$base 
 ```  
 
-A simulation of a phenotypic trait is performed as follows.
+Simulation of phenotypic traits requires the following arguments: 1) a SNP genotype matrix, 2) a set of confounders created with **create_factor**, an environmental variable, a reference set of weakly linked SNPs created with **create_refset**, a number of causal SNPs to be drawn from the reference set, and values for effect size and GxE interaction parameters. 
+
 ```{r sim, dependson=c("init"), results="hide"}   
-  sim <- simu_pheno( A.thaliana$genotype, confounder, env, ref.set,
-                     ncausal = 20, effect.size = 500, gxe = .3 )
+  n.causal <- 6
+  eff.size <- 5.0
+
+  sim <- simu_pheno(A.thaliana$genotype, 
+                    confounder, 
+                    env, 
+                    ref.set, ncausal = n.causal, 
+                    effect.size = eff.size, gxe = .5)
+  
+  ss <- sum(apply(genotype[,sim$causal.set], 2, var))
+  ss*(eff.size)^2*confounder$base^2/(ss*(eff.size)^2*confounder$base^2 + confounder$sigma^2 + confounder$base^2)
+  (ss*(eff.size)^2*confounder$base^2 + confounder$sigma^2)/(ss*(eff.size)^2*confounder$base^2 + confounder$sigma^2 + confounder$base^2)
 ```
 
-In this simulation, a polygenic trait is associated with 20 causal variants, sampled from the SNP reference set. Each causal variant is associated with an effect size of 500 in basic unit. Gene by environment interactions are modelled by using the *env* variable created from 'worldclim'. 
+In this simulation, a polygenic trait is associated with 6 causal variants, sampled from the SNP reference set. Each causal variant is associated with an effect size of 5 units. Gene by environment interactions are modelled by using the *env* variable created from 'worldclim'. 
 
 
 ```{r, dependson=c("sim")}   
-  hist(sim$phenotype, main = "Trait value")
+  hist(scale(sim$phenotype), main = "Trait value")
 ```
 
-To chech whether the simulated trait displays any geographic variation, the trait variable can interpolated on a geographic map as follows. 
+To check whether the simulated trait displays any geographic variation, the trait variable can interpolated on a geographic map as follows. 
 
 ```{r, dependson=c("sim")}   
   library(fields)
-  fit = fields::Krig(coordinates, sim$phenotype, theta = 10, m = 2)
+  fit = fields::Krig(coordinates, scale(sim$phenotype), theta = 10, m = 2)
   surface(fit, extrap = TRUE, xlab = "Longitude", ylab = "Latitude", levels = c(0))
   map(add = TRUE, interior = F)
 ```
 
 
 
+##### Running the oracle method
 
-
-
-##### Running GWAS
-
-Our next step is to perform a GWAS for the simulated phenotype, and to evaluate the relative power of methods to detect causal variants. To this objective, we use the 'linear regression' method as an oracle algorithm. The method is very close to the simulation model, and it becomes an oracle method when the true confounders are provided as arguments.
-
-Based on a principal component analysis of the genotype data, we evaluate that $K = 6$ factors explain population structure.  
+Our next step is to perform a GWAS for the simulated phenotype, and to evaluate the relative power of methods to detect causal variants. To this objective, we use the 'linear regression' method as an oracle algorithm. The method is very close to the simulation model, and it becomes an oracle method when the true confounders are provided in arguments.
 
 
 ```{r oracle, dependson=c("sim")}   
-pv.oracle <- oracle( sim$phenotype, genotype, confounder, K = 6 )$pv
+pv.oracle <- oracle(scale(sim$phenotype), 
+                    genotype, 
+                    confounder, K = 10)$pv
 ```
 
-Let us compare the results of method that estimate confounders at the same time as it computes association with phenotype. The **cate** method implements latent factor mixed models. 
+Now visualize the Manhattan plot for the oracle method. The vertical bars correspond to the causal variants in the simulation.
+
+```{r, dependson=c("cate")}   
+   plot(-log10(pv.oracle), cex = .4, col = "grey", main = "Manhattan plot (Oracle)")
+   points(sim$causal, -log10(pv.oracle)[sim$causal], type = "h", lty = 1, col = "blue")
+   abline(-log10(0.05/length(pv.oracle)), 0, lty = 2)
+```
+
+##### Heritability and mixed linear models
+
+In this section, we used a mixed model approach and the R package **rrBLUP** to provide an heritability estimate for the simulated trait. 
+
+
+```{r}
+library(rrBLUP)
+G <- A.thaliana$genotype
+rownames(G) <-  A.thaliana$ecotype.id[,1]
+data <- data.frame(y = scale(sim$phenotype), 
+                   gid = A.thaliana$ecotype.id[,1])
+
+#predict breeding values and compute h2
+kb <- kin.blup(data = data, 
+                geno="gid", 
+                pheno = "y", 
+                K = A.mat(G))
+
+cat("Heritability = ", kb$Vg/(kb$Vg + kb$Ve), "\n")
+```
+
+To provide a better estimate for the K matrix, we could use a latent factor model as follows.
+
+```{r}
+## fit latent factors using an LFMM
+mod.lfmm <- lfmm::lfmm_ridge(Y = A.thaliana$genotype, 
+                             X = scale(sim$phenotype), 
+                             K = 6)
+
+Kinship <- mod.lfmm$U %*% t(mod.lfmm$U)/nrow(mod.lfmm$U)
+rownames(Kinship) <- A.thaliana$ecotype.id[,1]
+## predict breeding values and compute h2
+kb <- kin.blup(data = data, 
+                geno="gid", 
+                pheno = "y", 
+                K = Kinship)
+
+cat("Heritability = ", kb$Vg/(kb$Vg + kb$Ve), "\n")
+```
+
+The simulated trait does not exhibit a very high heritability value. Let us perform an association study by using a mixed linear model.
+
+
+
+
+```{r}
+geno <- t(A.thaliana$genotype)
+colnames(geno) <- A.thaliana$ecotype.id[,1]
+G <- data.frame(marker = 1:nrow(A.thaliana$chrpos),
+                A.thaliana$chrpos,
+                geno,
+                check.names = FALSE)
+pheno <- data.frame(line = A.thaliana$ecotype.id[,1], 
+                    y = scale(sim$phenotype))
+
+mlm <- GWAS(pheno = pheno, 
+            geno = G, 
+            K = Kinship,
+            n.PC = 5,    
+            plot = FALSE)
+```
+
+```{r}
+## Manhattan plot
+plot(mlm$y, cex = .4, col = "grey",
+     ylab = "-log10(pvalues)",
+     main = "Manhattan plot (mlm)" )
+points(sim$causal, mlm$y[sim$causal], 
+       type = "h", lty = 1, col = "green4")
+abline(-log10(0.05/length(pv.oracle)), 0, lty = 2)
+```
+
+The results of a mixed linear model using the LFMM kinskip estimate are very close to the oracle method. 
+
+```{r}
+qqplot(-log10(pv.oracle), mlm$y, col = "grey", cex = .4, ylab ="mlm scores")
+abline(0,1, col = 'green4')
+```
+
+
+
+
+Let us compare the results of method that estimate confounders at the same time as it computes association with phenotype. The **cate** method implements latent factor mixed models. Based on a principal component analysis of the genotype data, we evaluate that around $K = 6$ factors explain population structure, and 6 hidden factors are used in cate. In cate, the pvalues are computed as follows. 
 
 
 ```{r cate, dependson=c("oracle")}   
-  library(cate)
-  pv.cate <- cate( ~ sim.phenotype, X.data = data.frame(sim$phenotype), Y = genotype, r = 6, calibrate = TRUE)$beta.p.value
+  pheno <- scale(sim$phenotype)
+  pv.cate <- cate::cate( ~ pheno, 
+                   X.data = data.frame(pheno), 
+                   Y = genotype, 
+                   r = 6, 
+                   calibrate = TRUE)$beta.p.value
 ```
 
-Now let us visualize the Manhattan plots for each method. The vertical bars correspond to the causal variants in the simulation. 
+Now let us visualize the Manhattan plot for the cate method and compare it to the Manhattan plot for the oracle method. The vertical bars correspond to the causal variants in the simulation. 
 
 ```{r, dependson=c("cate")}   
-   plot( -log10(pv.oracle), cex = .4, col = "grey", main = "Manhattan plot (Oracle)" )
-   points( sim$causal, -log10(pv.oracle)[sim$causal], type = "h", lty = 1, col = "blue" )
-   plot( -log10(pv.cate), cex = .4, col = "grey", main = "Manhattan plot (Latent factor model)" )
-   points( sim$causal, -log10(pv.cate)[sim$causal], type = "h", lty = 1, col = "orange" )
+   plot(-log10(pv.cate), cex = .4, col = "grey", main = "Manhattan plot (Latent factor model)" )
+   points(sim$causal, -log10(pv.cate)[sim$causal], type = "h", lty = 1, col = "orange" )
+    abline(-log10(0.05/length(pv.oracle)), 0, lty = 2)
 ```
 
 We eventually compare the results of the latent factor model with the oracle method.
 
 ```{r, dependson=c("cate")}   
    ## qqplot
-   qqplot( -log10(pv.oracle), -log10(pv.cate) , pch = 19, cex = .4, col = "grey" )
+   qqplot(-log10(pv.oracle), -log10(pv.cate) , pch = 19, cex = .4, col = "grey" )
    abline( 0, 1, lwd = 2, col = "orange" )
 ```
 
-In this situation, the latent factor model performed similarly to the oracle method (i.e., it is the right method to use). Other testing methods could be evaluated similarly (glm, mixed models, etc).  
+In this situation, the latent factor model  and  the oracle method performed similarly. Other testing methods could be evaluated similarly (glm, mixed models, etc). We compare the mixed modeling approach and cate below.  
 
+```{r, dependson=c("cate")}   
+   ## qqplot
+   qqplot(mlm$y, -log10(pv.cate) , pch = 19, cex = .4, col = "grey" )
+   abline( 0, 1, lwd = 2, col = "orange" )
+```
 
 
 ##### Comparison with LFMM
@@ -151,13 +260,18 @@ For comparisons with **cate**, we also use $K = 6$ factors in **lfmm**.
 
 
 ```{r lfmm}   
-lfmm.res <- lfmm::lfmm_ridge(Y = scale(genotype, scale = FALSE), X = scale(sim$phenotype), K = 6)
+lfmm.mod <- lfmm::lfmm_ridge(Y = genotype, 
+                             X = scale(sim$phenotype), 
+                             K = 6)
 ```
 
 We compute the pvalues as follows
 
 ```{r}   
-  p <- lfmm::lfmm_test(Y = scale(genotype, scale = FALSE), X = scale(sim$phenotype), lfmm = lfmm.res, calibrate = "gif")
+  p <- lfmm::lfmm_test(Y = genotype, 
+                       X = scale(sim$phenotype), 
+                       lfmm = lfmm.mod, 
+                       calibrate = "gif")
   pv.lfmm <- p$calibrated.pvalue
 ```
 
@@ -166,27 +280,50 @@ Now let us visualize the Manhattan plots for **lfmm** and **cate**. The vertical
 ```{r, dependson=c("cate")}   
    plot( -log10(pv.lfmm), cex = .4, col = "grey", main = "Manhattan plot (lfmm)" )
    points( sim$causal, -log10(pv.lfmm)[sim$causal], type = "h", lty = 1, col = "blue" )
-   plot( -log10(pv.cate), cex = .4, col = "grey", main = "Manhattan plot (cate)" )
-   points( sim$causal, -log10(pv.cate)[sim$causal], type = "h", lty = 1, col = "orange" )
+   abline(-log10(0.05/length(pv.oracle)), 0, lty = 2)
 ```
 
 We eventually compare the results of the latent factor model with the oracle method.
 
 ```{r, dependson=c("cate")}   
    ## plot
-   plot(-log10(pv.lfmm), -log10(pv.cate) , pch = 19, cex = .4, col = "grey" )
+   qqplot(-log10(pv.oracle), -log10(pv.lfmm) , pch = 19, cex = .4, col = "grey" )
    abline( 0, 1, lwd = 2, col = "blue" )
 ```
 
+
+##### conditional tests LFMM
+
+Based on previous analysis, we understood that only a handful of SNP could be detected with those simulation parameters. Here, we experimented *forward conditional tests*, in which the top hits are recursively included as covariates in an LFMM estimation/testing approach (12 cycles).
+
+```{r}
+cond.test <- lfmm::forward_test(Y = A.thaliana$genotype,
+                                X = scale(sim$phenotype),
+                                K = 6,
+                                niter = 12)
+```
+
+We compare the results with the truth.
+```{r}
+# proposed candidates
+cat("Candidate loci:")
+sort(cond.test$candidates)
+# truth
+cat("Causal SNPs:")
+sim$causal.set
+```
+
+
+
 #### Package reference
 
-* Francois O, Caye K (2017). naturalgwas: An R package for simulating phenotypes and evaluating GWAS methods with large geographic sampling.
+* Francois O, Caye K (2017). naturalgwas: An R package for simulating phenotypes and evaluating GWAS methods with large-scale geographic sampling.
 
 
 #### References
 
 
-* Atwell S, Huang YS, Vilhjalmsson BJ, et al. (2010). Genome-wide association study of 107 phenotypes in Arabidopsis thaliana inbred lines. Nature 465, 627-631.
+* Atwell S, Huang YS, Vilhjalmsson BJ, et al. (2010). Genome-wide association study of 107 phenotypes in *Arabidopsis thaliana* inbred lines. Nature 465, 627-631.
 
 * Francois O, Martins H, Caye K, Schoville SD (2016). Controlling false discoveries in genome scans for selection. Molecular Ecology 25, 454-469.
 

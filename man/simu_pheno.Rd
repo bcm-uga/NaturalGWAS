@@ -42,8 +42,12 @@ data(A.thaliana)
 env <- get_climate(A.thaliana$coord)
 confounder <- create_factor(A.thaliana$genotype, K = 20)
 ref.set <- create_refset(A.thaliana$chrpos, window = 101)
-sim.ph <- simu_pheno(A.thaliana$genotype, confounder, env, ref.set,
-ncausal = 20, effect.size = 100, gxe = 1)
+sim.ph <- simu_pheno(A.thaliana$genotype,
+                     confounder,
+                     env, ref.set,
+                     ncausal = 8,
+                     effect.size = 20,
+                     gxe = 1)
 }
 \seealso{
 \code{\link{create_refset}} \code{\link{create_factor}} \code{\link{get_climate}}
