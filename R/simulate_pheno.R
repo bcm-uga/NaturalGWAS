@@ -94,10 +94,10 @@ create_refset <- function(window = 101, chr.pos){
   #definition of a set of reference snps
   lch <- 0
   ref.set <- NULL
-  n.chr <- length(unique(chr.pos[ , 1]))
+  chr <- unique(chr.pos[ , 1])
 
-  for (i in 1:n.chr){
-  chromosome <- which( chr.pos == i )
+  for (i in chr){
+  chromosome <- which( chr.pos[,1] == i )
   set <-  seq(lch + 1 + (window - 1)/2, lch + length(chromosome), by = window)
   ref.set <- c(ref.set, set)
   lch <- lch + length(chromosome)
