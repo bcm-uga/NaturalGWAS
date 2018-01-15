@@ -18,5 +18,5 @@
 #' @keywords datasets
 #' @name A.thaliana
 #' @usage data(A.thaliana)
-#' @format A list with 4 arguments: genotype, coord, chrpos, f16
+#' @format A list with 4 arguments: genotype, coord, chrpos, f16, ecotype.id
 NULL
