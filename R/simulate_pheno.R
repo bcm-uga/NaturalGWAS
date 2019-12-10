@@ -148,7 +148,7 @@ simu_pheno <- function(genotype, confounder, environment = NULL, ref.set, ncausa
 
   if (is.null(environment)){
     if (length(causal.set) == 1){
-      pheno <- effect.size*genotype[,causal.set] + rowSums(confounders$factors) + rnorm(nrow(genotype), sd = confounder$sigma)
+      pheno <- effect.size*genotype[,causal.set] + rowSums(confounder$factors) + rnorm(nrow(genotype), sd = confounder$sigma)
     }else{
       pheno <- effect.size*rowSums(genotype[ , causal.set]) + rowSums(confounder$factors) + rnorm(nrow(genotype), sd = confounder$sigma)
     }
